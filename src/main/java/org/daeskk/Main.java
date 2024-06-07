@@ -4,6 +4,10 @@ package org.daeskk;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
-        System.out.println("ISI COMPILER V0.1");
+        Lexer lexer = new Lexer();
+
+        System.out.println(lexer);
+
+        lexer.execute("C:\\Users\\arthur\\IdeaProjects\\compiler\\src\\input.isi");
     }
 }

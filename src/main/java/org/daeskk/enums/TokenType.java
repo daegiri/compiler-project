@@ -1,8 +1,12 @@
 package org.daeskk.enums;
 
 public enum TokenType {
-    IDENTIFIER,
-    NUMBER,
+    IDENTIFIER,             // (a..z) (A..Z|0..9|a..z)* -> camel case
+    NUMBER,                 // (0..9)+
+    PUNCTUATION,            // ;
+    OPERATION,              // > | >= | < | <= | == | !=
+    ASSIGN,                 // =
+
     PLUS_SYMBOL,
     MINUS_SYMBOL,
     MULTIPLY_SYMBOL,
