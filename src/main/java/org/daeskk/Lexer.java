@@ -53,7 +53,14 @@ public class Lexer {
         return this.currentPosition == this.fileContent.length();
     }
 
+    private boolean isEOF(char c) {
+        return c == '\0';
+    }
+
     private char nextChar() {
+        if (isEOF()) {
+            return '\0';
+        }
         return this.fileContent.charAt(this.currentPosition++);
     }
 
@@ -92,6 +99,7 @@ public class Lexer {
                     }
 
                     else if (isNumber(currentChar)) {
+                        term.append(currentChar);
                         state = 3;
                     }
 
@@ -100,11 +108,12 @@ public class Lexer {
                     }
 
                     else if (isOperator(currentChar)) {
+                        term.append(currentChar);
                         state = 5;
                     }
 
                     else {
-                        throw new LexicalException("Unrecognized SYMBOL");
+                        throw new LexicalException("Unrecognized Symbol");
                     }
 
                     break;
@@ -113,9 +122,14 @@ public class Lexer {
                     if (isChar(currentChar) || isNumber(currentChar)) {
                         term.append(currentChar);
                         state = 1;
-                    } else {
+                    }
+                    else if (isSpace(currentChar) || isOperator(currentChar)) {
                         state = 2;
                     }
+                    else {
+                        throw new LexicalException("Malformed Identifier");
+                    }
+
                     break;
 
                 case 2:
@@ -126,7 +140,35 @@ public class Lexer {
                             term.toString()
                     );
 
+                case 3:
+                    if (isNumber(currentChar)) {
+                        term.append(currentChar);
+                        state = 3;
+                    }
+                    else if (!isChar(currentChar) || isEOF(currentChar)) {
+                        state = 4;
 
+                        return new Token(
+                                TokenType.NUMBER,
+                                term.toString()
+                        );
+                    }
+                    else {
+                        throw new LexicalException("Unrecognized Number");
+                    }
+
+                    break;
+
+                case 5:
+                    back();
+
+                    return new Token(
+                            TokenType.OPERATOR,
+                            term.toString()
+                    );
+
+                default:
+                    throw new LexicalException("Unknown error during lexical analysis");
             }
         }
     }
@@ -147,8 +189,10 @@ public class Lexer {
 
             } while (token != null);
 
+        } catch (LexicalException e) {
+            System.out.println("Lexical error occurred. " + e.getMessage());
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("Generic error occurred. " + e.getMessage());
         }
     }
 }
