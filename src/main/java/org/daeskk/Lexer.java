@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 
 @Data
 @NoArgsConstructor
@@ -21,7 +20,6 @@ public class Lexer {
     private String fileContent;
     private int currentPosition;
     private int state;
-    private List<Token> tokens = new ArrayList<>();
 
     public String readFile(String fileName) throws IOException {
         String fileContent = Files.readString(Paths.get(fileName));
@@ -68,17 +66,6 @@ public class Lexer {
         this.currentPosition--;
     }
 
-    private String readWhile(Predicate<Character> predicate) {
-        StringBuilder result = new StringBuilder();
-
-        while (currentPosition < fileContent.length()
-                && predicate.test(fileContent.charAt(currentPosition))) {
-            result.append(fileContent.charAt(currentPosition++));
-        }
-
-        return result.toString();
-    }
-
     private Token nextToken() {
         if (isEOF()) {
             return null;
@@ -93,25 +80,21 @@ public class Lexer {
 
             switch (state) {
                 case 0:
+                    if (isSpace(currentChar)) {
+                        break;
+                    }
+
+                    term.append(currentChar);
+
                     if (isChar(currentChar)) {
-                        term.append(currentChar);
                         state = 1;
                     }
-
                     else if (isNumber(currentChar)) {
-                        term.append(currentChar);
                         state = 3;
                     }
-
-                    else if (isSpace(currentChar)) {
-                        state = 0;
-                    }
-
                     else if (isOperator(currentChar)) {
-                        term.append(currentChar);
                         state = 5;
                     }
-
                     else {
                         throw new LexicalException("Unrecognized Symbol");
                     }
@@ -133,7 +116,8 @@ public class Lexer {
                     break;
 
                 case 2:
-                    back();
+                    if (!isEOF(currentChar))
+                        back();
 
                     return new Token(
                             TokenType.IDENTIFIER,
@@ -143,11 +127,8 @@ public class Lexer {
                 case 3:
                     if (isNumber(currentChar)) {
                         term.append(currentChar);
-                        state = 3;
                     }
                     else if (!isChar(currentChar) || isEOF(currentChar)) {
-                        state = 4;
-
                         return new Token(
                                 TokenType.NUMBER,
                                 term.toString()
@@ -160,7 +141,9 @@ public class Lexer {
                     break;
 
                 case 5:
-                    back();
+                    if (isOperator(currentChar)) {
+                        term.append(currentChar);
+                    }
 
                     return new Token(
                             TokenType.OPERATOR,
@@ -190,9 +173,9 @@ public class Lexer {
             } while (token != null);
 
         } catch (LexicalException e) {
-            System.out.println("Lexical error occurred. " + e.getMessage());
+            System.out.println("Lexical error occurred: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println("Generic error occurred. " + e.getMessage());
+            System.out.println("Generic error occurred: " + e.getMessage());
         }
     }
 }
